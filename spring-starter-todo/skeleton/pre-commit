@@ -1,0 +1,11 @@
+echo "Pre-commit hook Code"
+FILE=./.idea/sonarlint
+if [ -d "$FILE" ]; then
+    echo "SONARLINT IS ENABLED."
+fi
+if [ ! -d "$FILE" ]; then
+    echo "SonarLint plugin IS NOT ENABLED in the IDE. Install SonarLint Plugin on your IDE.
+    Ensure that all code smells, bugs, etc. highlighted by SonarLint, are addressed as per your project quality gate
+    settings before commit. https://plugins.jetbrains.com/plugin/7973-sonarlint"
+    exit 1
+fi

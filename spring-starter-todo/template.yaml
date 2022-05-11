@@ -1,0 +1,97 @@
+apiVersion: backstage.io/v1beta2
+kind: Template
+metadata:
+  name: spring-boot-starter
+  title: Spring Boot Starter App
+  description: Creates a todo spring boot application with the recommended code structure.
+  tags:
+    - recommended
+    - java
+    - spring-boot
+    - mvc
+spec:
+  owner: pranavashashank.p@zemosolabs.com
+  type: spring-boot-service
+  path: '.'
+  parameters:
+    - title: Project Parameters
+      required:
+        - project_name
+        - description
+        - artifact_id
+        - package_name
+      properties:
+        project_name:
+          title: Project Name
+          type: string
+          description: Name of the spring boot service.
+        artifact_id:
+          title: Artifact Id
+          type: string
+          pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
+          description: Artifact id of the service. Lowercase, URL-safe characters only.
+        package_name:
+          title: Package Name
+          type: string
+          description: Format - com.zemosolabs.<package_name>
+        description:
+          title: Description
+          type: string
+          description: Help others understand what this app does.
+    - title: Repository location details
+      required:
+        - owner
+        - repoUrl
+      properties:
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+        repoUrl:
+          title: Choose a location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+  steps:
+    # this action will go use cookiecutter to template some files into the working directory
+    - id: template # an ID for the templating step
+      name: Create skeleton # A user friendly name for the action
+      action: fetch:cookiecutter
+      input:
+        url: ./skeleton # this is the directory for your skeleton files.
+        # If it's located next to the `template.yaml` then you can use a relative path,
+        # otherwise you can use absolute URLs that point at the VCS: https://github.com/backstage/backstage/tree/master/some_folder_somewhere
+        values:
+          # for each value that you need to pass to cookiecutter, they should be listed here and set in this values object.
+          # You can use the handlebars templating syntax to pull them from the input parameters listed in the same file
+          name: '{{ parameters.project_name }}'
+          owner: '{{ parameters.owner }}'
+          destination: '{{ parseRepoUrl parameters.repoUrl }}'
+          artifact_id: '{{parameters.artifact_id}}'
+          description: '{{parameters.description}}'
+          package_name: '{{parameters.package_name}}'
+
+    # this action is for publishing the working directory to the VCS
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: [ 'github.com' ]
+        description: 'This is {{ parameters.project_name }}'
+        repoUrl: '{{ parameters.repoUrl }}'
+
+    # this action will then register the created component in Backstage
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: '{{ steps.publish.output.repoContentsUrl }}'
+        catalogInfoPath: '/catalog-info.yaml'
+
+
