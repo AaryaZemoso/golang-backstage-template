@@ -1,4 +1,4 @@
-apiVersion: backstage.io/v1beta2
+apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: spring-boot-starter
@@ -70,12 +70,12 @@ spec:
         values:
           # for each value that you need to pass to cookiecutter, they should be listed here and set in this values object.
           # You can use the handlebars templating syntax to pull them from the input parameters listed in the same file
-          name: '{{ parameters.project_name }}'
-          owner: '{{ parameters.owner }}'
-          destination: '{{ parseRepoUrl parameters.repoUrl }}'
-          artifact_id: '{{parameters.artifact_id}}'
-          description: '{{parameters.description}}'
-          package_name: '{{parameters.package_name}}'
+          name: '${{ parameters.project_name }}'
+          owner: '${{ parameters.owner }}'
+          destination: '${{ parameters.repoUrl | parseRepoUrl }}'
+          artifact_id: '${{parameters.artifact_id}}'
+          description: '${{parameters.description}}'
+          package_name: '${{parameters.package_name}}'
 
     # this action is for publishing the working directory to the VCS
     - id: publish
@@ -83,15 +83,15 @@ spec:
       action: publish:github
       input:
         allowedHosts: [ 'github.com' ]
-        description: 'This is {{ parameters.project_name }}'
-        repoUrl: '{{ parameters.repoUrl }}'
+        description: 'This is ${{ parameters.project_name }}'
+        repoUrl: '${{ parameters.repoUrl }}'
 
     # this action will then register the created component in Backstage
     - id: register
       name: Register
       action: catalog:register
       input:
-        repoContentsUrl: '{{ steps.publish.output.repoContentsUrl }}'
+        repoContentsUrl: '${{ steps.publish.output.repoContentsUrl }}'
         catalogInfoPath: '/catalog-info.yaml'
 
 
